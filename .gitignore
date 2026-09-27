@@ -1,0 +1,16 @@
+.idea/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+web/analytics.sqlite3
+
+.venv/
+venv/
+env/
+ENV/
+
+.pytest_cache/
+.mypy_cache/
