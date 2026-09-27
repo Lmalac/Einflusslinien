@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from model.beam import Beam, SupportType
-from calculation.influence_line import (
+from calculation.influence import (
     calculate_influence_line
 )
 
@@ -21,11 +21,14 @@ beam.add_support(
 )
 
 
-positions, values = calculate_influence_line(
+result = calculate_influence_line(
     beam=beam,
-    reaction_dof=0,
+    quantity="R",
+    position=0.0,
     number_of_points=101
 )
+positions = result["positions"]
+values = result["values"]
 
 
 plt.figure(figsize=(10, 5))
