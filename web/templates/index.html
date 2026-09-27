@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Построение линий влияния многопролетной балки</title>
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #dff5b0;
+            color: #222;
+        }
+
+        .container {
+            width: 1000px;
+            max-width: calc(100% - 40px);
+            margin: 0 auto;
+            padding-top: 50px;
+            padding-bottom: 50px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 27px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .page-header { position: relative; display: flex; justify-content: space-between; align-items: flex-start; min-height: 48px; margin-bottom: 38px; }
+        .page-header h1 { text-align: left; padding-right: 220px; }
+        .visitor-counter { position: absolute; top: -14px; right: 0; display: flex; align-items: center; gap: 11px; min-width: 142px; box-sizing: border-box; padding: 10px 16px; border: 1px solid rgba(173,52,104,.2); border-radius: 14px; background: linear-gradient(135deg, #fff8fb 0%, #f8dce9 100%); box-shadow: 0 5px 14px rgba(127,45,83,.16); color: #704257; }
+        .visitor-counter-icon { width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 34px; border-radius: 11px; background: #f2c5d9; color: #a23d6a; }
+        .visitor-counter-icon svg { width: 20px; height: 20px; }
+        .visitor-counter-copy { display: grid; gap: 1px; }
+        .visitor-counter-label { color: #825a6d; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+        .visitor-counter strong { color: #8d315b; font-size: 21px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+        @media (max-width: 960px) {
+            .page-header { display: block; margin-bottom: 20px; }
+            .page-header h1 { padding: 0 0 68px; font-size: 24px; }
+            .visitor-counter { top: auto; right: auto; bottom: 0; left: 0; }
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+
+            box-shadow:
+                0 3px 10px rgba(0, 0, 0, 0.12);
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        select {
+            padding: 8px 12px;
+            font-size: 17px;
+
+            border: 1px solid #aaa;
+            border-radius: 6px;
+
+            background: white;
+        }
+
+        #span-inputs {
+            margin-top: 15px;
+        }
+
+        .span-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .span-row label {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .span-row input {
+            width: 80px;
+            padding: 7px;
+            font-size: 16px;
+
+            border: 1px solid #aaa;
+            border-radius: 5px;
+        }
+
+        .unit {
+            font-size: 16px;
+        }
+
+        .support-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 12px;
+        }
+
+        .support-row label {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .support-row select {
+            min-width: 240px;
+        }
+
+        #intermediate-supports {
+            margin-top: 20px;
+        }
+
+        .intermediate-title {
+            margin-top: 20px;
+            margin-bottom: 10px;
+
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .intermediate-support-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 12px;
+        }
+
+        .intermediate-support-row label {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .intermediate-support-row select {
+            min-width: 240px;
+        }
+
+        #hinges {
+            margin-top: 20px;
+        }
+
+        .hinge-title {
+            margin-top: 20px;
+            margin-bottom: 10px;
+
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .hinge-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            margin-top: 12px;
+        }
+
+        .hinge-row label {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .hinge-row input {
+            width: 80px;
+            padding: 7px;
+
+            font-size: 16px;
+
+            border: 1px solid #aaa;
+            border-radius: 5px;
+        }
+
+        .hinge-warning {
+            margin-top: 10px;
+
+            font-size: 14px;
+            color: #c62828;
+        }
+
+        #total-length {
+            margin-top: 20px;
+
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        #build-scheme-button {
+            display: block;
+
+            margin: 25px auto 0;
+
+            padding: 12px 28px;
+
+            font-size: 18px;
+            font-weight: 600;
+
+            border: none;
+            border-radius: 8px;
+
+            background: #2e7d32;
+            color: white;
+
+            cursor: pointer;
+        }
+
+        #build-scheme-button:hover {
+            background: #256628;
+        }
+
+        #beam-area {
+            margin-top: 30px;
+            padding: 40px 20px 80px;
+
+            overflow-x: auto;
+        }
+
+        #beam-wrapper {
+            position: relative;
+
+            width: 100%;
+            min-width: 700px;
+
+            height: 190px;
+        }
+
+        #beam {
+            position: absolute;
+
+            left: 0;
+            right: 0;
+
+            top: 55px;
+
+            height: 8px;
+
+            background: #333;
+
+            border-radius: 4px;
+        }
+
+        .span-separator {
+            position: absolute;
+
+            top: 35px;
+
+            width: 2px;
+            height: 48px;
+
+            background: #d32f2f;
+
+            transform: translateX(-50%);
+        }
+
+        .dimension {
+            position: absolute;
+
+            top: 95px;
+
+            transform: translateX(-50%);
+
+            font-size: 14px;
+
+            white-space: nowrap;
+        }
+
+        .end-label {
+            position: absolute;
+
+            top: 20px;
+
+            transform: translateX(-50%);
+
+            font-weight: bold;
+        }
+
+        .support-symbol {
+            position: absolute;
+
+            top: 63px;
+
+            transform: translateX(-50%);
+
+            font-size: 28px;
+
+            line-height: 1;
+        }
+
+        .hinge-symbol {
+            position: absolute;
+
+            top: 49px;
+
+            transform: translateX(-50%);
+
+            width: 20px;
+            height: 20px;
+
+            border: 3px solid #1565c0;
+            border-radius: 50%;
+
+            background: white;
+
+            box-sizing: border-box;
+        }
+        #scheme-result {
+    margin-top: 15px;
+    padding: 12px 16px;
+
+    background: #eef8f0;
+    border: 1px solid #9bc5a3;
+    border-radius: 8px;
+
+    color: #245b2d;
+    font-size: 15px;
+        }
+
+        #scheme-warning {
+            color: #c00;
+            font-weight: 700;
+            animation: scheme-warning-blink 1s steps(2, start) infinite;
+        }
+
+        @keyframes scheme-warning-blink {
+            to { visibility: hidden; }
+        }
+.influence-controls { display:flex; align-items:end; flex-wrap:wrap; gap:14px; margin-top:22px; }
+.influence-controls label { display:flex; flex-direction:column; gap:6px; font-size:15px; }
+.influence-controls [hidden] { display:none; }
+.influence-controls input,.influence-controls select { min-width:150px; height:42px; box-sizing:border-box; }
+#calculate-influence-button { height:42px; box-sizing:border-box; padding:0 18px; border:0; border-radius:7px; background:#1565c0; color:white; font-size:16px; cursor:pointer; }
+#influence-result { margin-top:18px; }
+.influence-stats { margin-top:8px; line-height:1.7; }
+#influence-chart { display:block; width:100%; min-height:300px; margin-top:10px; }
+.error-message { color:#b71c1c; }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header class="page-header">
+    <h1>
+        Построение линий влияния многопролетной балки
+    </h1>
+    <aside class="visitor-counter" aria-label="Число посетителей сайта">
+        <span class="visitor-counter-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="10" cy="7" r="4"/>
+                <path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+        </span>
+        <span class="visitor-counter-copy">
+            <span class="visitor-counter-label">Сайт посетили</span>
+            <strong id="visitor-count">—</strong>
+        </span>
+    </aside>
+    </header>
+
+
+    <div class="panel">
+
+        <div class="row">
+
+            <label for="span-count">
+                Количество пролётов:
+            </label>
+
+            <select id="span-count">
+
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+
+            </select>
+
+        </div>
+
+
+        <div id="span-inputs"></div>
+
+    </div>
+
+
+    <div class="panel">
+
+        <div class="row">
+
+            <label for="left-support">
+                Левая опора:
+            </label>
+
+            <select id="left-support">
+
+                <option value="free">
+                    Свободный конец
+                </option>
+
+                <option value="pinned">
+                    Шарнирно-неподвижная
+                </option>
+
+                <option value="roller">
+                    Шарнирно-подвижная
+                </option>
+
+                <option value="fixed">
+                    Заделка
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="row">
+
+            <label for="right-support">
+                Правая опора:
+            </label>
+
+            <select id="right-support">
+
+                <option value="free">
+                    Свободный конец
+                </option>
+
+                <option value="pinned">
+                    Шарнирно-неподвижная
+                </option>
+
+                <option value="roller">
+                    Шарнирно-подвижная
+                </option>
+
+                <option value="fixed">
+                    Заделка
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div id="intermediate-supports"></div>
+
+        <div id="hinges"></div>
+
+
+        <button id="build-scheme-button">
+            Построить расчётную схему
+        </button>
+        <div id="scheme-result"></div>
+        <div class="influence-controls">
+            <label for="influence-quantity">Тип линии влияния
+                <select id="influence-quantity">
+                    <option value="R">R — реакция опоры</option>
+                    <option value="M">M — изгибающий момент</option>
+                    <option value="Q">Q — поперечная сила</option>
+                    <option value="w">w — прогиб</option>
+                </select>
+            </label>
+            <label id="influence-section-label" for="influence-section">Координата сечения, м
+                <input id="influence-section" type="number" min="0" step="0.1" value="0">
+            </label>
+            <label id="influence-support-label" for="influence-support" hidden>Опора для R
+                <select id="influence-support"></select>
+            </label>
+            <button id="calculate-influence-button" type="button" disabled>Построить линию влияния</button>
+        </div>
+        <div id="influence-result" aria-live="polite"></div>
+    </div>
+
+
+    <div class="panel">
+
+        <div id="total-length">
+            Общая длина: 0.00 м
+        </div>
+
+
+        <div id="beam-area">
+
+            <div id="beam-wrapper">
+
+                <div id="beam"></div>
+
+                <div id="separators-container"></div>
+
+                <div id="dimensions-container"></div>
+
+                <div id="ends-container"></div>
+
+                <div id="supports-container"></div>
+
+                <div id="hinges-container"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="/static/app.js?v=20260927-1"></script>
+
+</body>
+</html>
